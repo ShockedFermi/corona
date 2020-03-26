@@ -26,23 +26,41 @@ def exp_log( t, Ni_tot, K0, K1, t_inflection, t_measures):
         return logistic( t, Ni_tot, K1, t_inflection )
 """
     
-def logistic( t, Ni_tot, K, t_inflection):
+def logistic( t,
+              t_inflection,
+              K,
+              pop ):
     """
-    Ni_tot is the final number of infections: [current_number, POPULATION]
+    pop is the population: [current_number, POPULATION]
     K is the contamination factor: [current_rate*4/pop, inf]
     t_infletion is the time of inflection point
     """
-    return Ni_tot/(1 + np.exp((t_inflection - t)*K))
+    return pop/(1 + np.exp((t_inflection - t)*K))
 
-def logistic_s(t, pop, K, t_inflection, pop_s, K_s, t_inflection_s ):
+def logistic_s(t, t_inflection, t_inflection_s, K,  K_s, pop_s, pop):
     return logistic(t, pop, K, t_inflection)*np.sqrt(pop_s*pop_s/pop/pop + t_inflection_s*t_inflection_s*K*K + K_s*K_s*(t - t_inflection)**2)
 
-def exponential( t, K, N_0 ):
+def logistic_piece( t,
+                    t_measures,
+                    t_inflection,
+                    K0,
+                    K1,
+                    N0,
+                    pop):
+    return np.piecewise( t,
+                         [ t <  t_measures,
+                           t >= t_measures ],
+                         [ lambda t, t_inflection, K0, K1, N0, pop: exponential( t,               K0, N0 ),
+                           lambda t, t_inflection, K0, K1, N0, pop: logistic   ( t, t_inflection, K1, pop ) ],
+                         t_inflection, K0, K1, N0, pop )
+
+
+def exponential( t, K, N0 ):
     """
     K is the contamination factor
-    N_0 is the number of infected at t = 0
+    N0 is the number of infected at t = 0
     """
-    return N_0*np.exp(t*K)
+    return N0*np.exp(t*K)
 
 def linear( t, a, b ):
     return a + b*t
